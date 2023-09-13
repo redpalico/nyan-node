@@ -31,6 +31,15 @@ app.post('/', (req, res) => {
   res.send(`${userInput}AAA - ${timestamp}`);
 });
 
+app.get('/log', (req, res) => {
+  db.all("SELECT * FROM user_data", [], (err, rows) => {
+    if(err) {
+      return console.error(err.message);
+    }
+    res.json(rows);
+  });
+});
+
 app.listen(port, () => {
   console.log(`App listening at http://localhost:${port}`);
 });

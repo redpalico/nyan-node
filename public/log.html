@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Database Log</title>
+</head>
+<body>
+
+<h1>Database Log</h1>
+<div id="log"></div>
+
+<script>
+  async function fetchLog() {
+    const response = await fetch('/log');
+    const log = await response.json();
+    const logDiv = document.getElementById('log');
+    logDiv.innerHTML = log.map(entry => `<p>${entry.info} - ${entry.timestamp}</p>`).join('');
+  }
+
+  fetchLog();
+</script>
+</body>
+</html>
