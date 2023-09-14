@@ -1,45 +1,49 @@
 const express = require('express');
+const bodyParser = require('body-parser');
 const sqlite3 = require('sqlite3').verbose();
 const app = express();
-const port = 3001;
+const port = 3000;
 
-app.use(express.urlencoded({ extended: true }));
-app.use(express.static('public'));
-
-// Initialize the database
-const db = new sqlite3.Database(':memory:');
+const db = new sqlite3.Database('database.db');
 
 db.serialize(() => {
-  db.run("CREATE TABLE user_data (info TEXT, timestamp TEXT)");
+  db.run("CREATE TABLE IF NOT EXISTS logs (text TEXT, timestamp TEXT)");
 });
 
+app.use(bodyParser.urlencoded({ extended: true }));
+
 app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/public/index.html');
+  res.send(`
+    <form action="/" method="POST">
+      <input type="text" name="userInput"/>
+      <button type="submit">Submit</button>
+    </form>
+  `);
 });
 
 app.post('/', (req, res) => {
-  const userInput = req.body.userInput;
+  const userInput = req.body.userInput + 'AAA';
   const timestamp = new Date().toISOString();
 
-  db.run("INSERT INTO user_data VALUES (?, ?)", [userInput, timestamp], function(err) {
+  db.run("INSERT INTO logs (text, timestamp) VALUES (?, ?)", [userInput, timestamp], function(err) {
     if (err) {
       return console.log(err.message);
     }
-    console.log(`A new row has been inserted with rowid ${this.lastID}`);
+    res.send(`You submitted: ${userInput}`);
   });
-
-  res.send(`${userInput}AAA - ${timestamp}`);
 });
 
-app.get('/log', (req, res) => {
-  db.all("SELECT * FROM user_data", [], (err, rows) => {
+app.get('/log.html', (req, res) => {
+  db.all("SELECT * FROM logs", [], (err, rows) => {
     if(err) {
-      return console.error(err.message);
+      throw err;
     }
-    res.json(rows);
+
+    const html = rows.map(row => `${row.text} at ${row.timestamp}`).join('<br>');
+    res.send(html);
   });
 });
 
 app.listen(port, () => {
-  console.log(`App listening at http://localhost:${port}`);
+  console.log(`App running on port ${port}`);
 });
